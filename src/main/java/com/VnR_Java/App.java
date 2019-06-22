@@ -1,8 +1,14 @@
 package com.VnR_Java;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+
+import org.json.simple.JSONObject;
 
 import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -42,8 +48,29 @@ public class App
 	public static void main( String[] args ) throws Exception
 	{
 		ProcessingFile processFile = new ProcessingFile();
+		
+		//****** Improvement - read json file directly
+      //  Create JSON file with reqired fields.
+	  // on local machine, the json file get generated at location: C:\Users\praka\AppData\Roaming\gcloud\legacy_credentials\aec.prakash@gmail.com 
+	        JSONObject jo = new JSONObject();
+	        jo.put("client_id", "32555940559.apps.googleusercontent.com");
+	        jo.put("client_secret", "ZmssLNjJy2998hD4CTg2ejr2");
+	        jo.put("refresh_token", "1/uxJ2_45BuwFhKQf2VEEDwNDf9JMqLiRC8AVZ0iEFXCw");
+	        jo.put("type", "authorized_user");
 
-		GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("C:\\Users\\praka\\AppData\\Roaming\\gcloud\\legacy_credentials\\aec.prakash@gmail.com\\adc.json"))
+			 new File("/jsonFolder").mkdir();
+			 try (FileWriter file = new FileWriter("/jsonFolder/adc.json")) {
+				 
+		            file.write(jo.toJSONString());
+		            file.flush();
+		 
+		        } catch (IOException e) {
+		            e.printStackTrace();
+		        }
+
+		
+		//set google credenials to deal with google storage
+		GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("/jsonFolder/adc.json"))
 				.createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
 		Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
 
@@ -55,6 +82,7 @@ public class App
 		}
 		
 		
+		//for using pubsub, set GOOGLE_APPLICATION_CREDENTIALS env variable with above json file
 		//recieve messages from pubsub api
 		ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(
 				projectId, "subscriber1");

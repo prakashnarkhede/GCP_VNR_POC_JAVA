@@ -79,6 +79,14 @@ public class ProcessingFile {
 		//Get the file to be processed in temp folder, delete it from google cloud bucket
 		//*********************************************************************************//
 
+		//////was not sure about what is directory structure on after deployment on kubernates, so creating directry
+		//
+		//******* improvement --- clean both directories after processing
+		 new File("/tempFolder/InputFile").mkdirs();
+		 new File("/tempFolder/OutputFile").mkdirs();
+
+		
+		
 		Storage storage = null;
 		Blob blob;
 		BlobId blobId = null;
@@ -89,7 +97,7 @@ public class ProcessingFile {
 		 blobId = BlobId.of(bucketName, consumerFolderName+"/"+IO_folderName+"/"+fileName);
 		 blob = storage.get(blobId);
 		// Download file to specified path
-		blob.downloadTo(Paths.get("tempFolder/InputFile"+"/"+fileName));
+		blob.downloadTo(Paths.get(System.getProperty("user.dir")+"//tempFolder/InputFile"+"/"+fileName));
 		} catch(Exception e) {
 			System.out.println("Exception while getting file from google cloud bucket. More details ---- "+e.getMessage());
 		}
@@ -105,15 +113,16 @@ public class ProcessingFile {
 		
 		ProcessingFile c = new ProcessingFile();
 		
-		File OutPutfile = new File("tempFolder/OutputFile/Out_"+fileName);
+		File OutPutfile = new File(System.getProperty("user.dir")+"//tempFolder/OutputFile/Out_"+fileName);
 		BufferedWriter writer = new BufferedWriter(new FileWriter(OutPutfile));
 
 		
 		
 		
 		try {
-			List<String> allLines = Files.readAllLines(Paths.get("tempFolder/InputFile"+"/"+fileName));
+			List<String> allLines = Files.readAllLines(Paths.get(System.getProperty("user.dir")+"//tempFolder/InputFile"+"/"+fileName));
 			for (String line : allLines) {
+				//getCountryCodeValue("IN");
 				System.out.println(line.toUpperCase());
 			    writer.write(line.toUpperCase());
 			    writer.write("\n");
@@ -125,7 +134,7 @@ public class ProcessingFile {
 		    
 		    
 		    //upload the processed output file to GCP Bucket
-		    InputStream content = new FileInputStream(new File(System.getProperty("user.dir")+"\\tempFolder\\OutputFile\\Out_"+fileName));
+		    InputStream content = new FileInputStream(new File(System.getProperty("user.dir")+"//tempFolder/OutputFile/Out_"+fileName));
 		    BlobId blobId1 = BlobId.of("ctct_vnr_bucket_output", consumerFolderName+"/"+"OutputFile"+"/Out_"+fileName);
 		    BlobInfo blobInfo = BlobInfo.newBuilder(blobId1).setContentType("text/plain").build();
 		    storage.create(blobInfo, content);
@@ -152,6 +161,7 @@ public class ProcessingFile {
 			"35.222.70.99",
 			"ctcuDB", "maximal-ship-242013:us-central1:ctcu-vnr-tables");
 
+			//	Class.forName("com.mysql.jdbc.Driver"); 
 				Connection connection = DriverManager.getConnection(jdbcUrl, "root", "root");
 			 String query = "SELECT * FROM ctry_cde where Country_Code = '"+country+"';";
 			      Statement st = connection.createStatement();
@@ -229,12 +239,7 @@ public class ProcessingFile {
 
 	}
 	public void sendOutputFileToBucket() {
-		 
-		 
-//		Storage storage = StorageOptions.getDefaultInstance().getService();
-//		BlobId blobId = BlobId.of("bucket", "blob_name");
-//		BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("text/plain").build();
-//		Blob blob = storage.create(blobInfo, "Hello, Cloud Storage!".getBytes(UTF_8));		
+		
 	}
 
 }
